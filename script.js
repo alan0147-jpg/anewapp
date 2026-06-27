@@ -15,6 +15,7 @@ const avatarInput = document.querySelector("#avatarInput");
 const skipScoreBtn = document.querySelector("#skipScoreBtn");
 const formMessage = document.querySelector("#formMessage");
 const MAX_AVATAR_SIZE = 1024 * 1024;
+const MAX_LEADERBOARD_SCORES = 30;
 
 const keys = new Set();
 const bullets = [];
@@ -69,7 +70,7 @@ function saveScore(seconds, playerName = "匿名飛行員", avatar = "") {
     date: new Date().toLocaleDateString("zh-TW"),
   });
   scores.sort((a, b) => b.seconds - a.seconds);
-  localStorage.setItem("plane-survival-scores", JSON.stringify(scores.slice(0, 5)));
+  localStorage.setItem("plane-survival-scores", JSON.stringify(scores.slice(0, MAX_LEADERBOARD_SCORES)));
   renderScores();
 }
 
@@ -86,7 +87,7 @@ function renderScores() {
     return;
   }
 
-  scores.forEach((score, index) => {
+  scores.slice(0, MAX_LEADERBOARD_SCORES).forEach((score, index) => {
     const item = document.createElement("li");
     item.className = "score-item";
 
