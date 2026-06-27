@@ -17,6 +17,9 @@ const skipScoreBtn = document.querySelector("#skipScoreBtn");
 
 const keys = new Set();
 const bullets = [];
+
+resizeCanvas();
+
 const stars = Array.from({ length: 90 }, () => ({
   x: Math.random() * canvas.width,
   y: Math.random() * canvas.height,
@@ -48,6 +51,9 @@ const game = {
   level: 1,
   pendingScore: 0,
 };
+
+resizeCanvas.entitiesReady = true;
+resizeCanvas();
 
 function getScores() {
   return JSON.parse(localStorage.getItem("plane-survival-scores") || "[]");
@@ -676,6 +682,38 @@ window.getGameDebug = () => ({
   running: game.running,
   survival: game.survival,
   pointerActive: pointer.active,
+});
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const nextWidth = Math.max(320, Math.round(rect.width || 960));
+  const nextHeight = Math.max(260, Math.round(rect.height || 600));
+  const oldWidth = canvas.width || nextWidth;
+  const oldHeight = canvas.height || nextHeight;
+
+  if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+
+  canvas.width = nextWidth;
+  canvas.height = nextHeight;
+
+  if (resizeCanvas.entitiesReady) {
+    player.x = clamp((player.x / oldWidth) * nextWidth, player.radius + 6, nextWidth - player.radius - 6);
+    player.y = clamp((player.y / oldHeight) * nextHeight, player.radius + 6, nextHeight - player.radius - 6);
+
+    stars.forEach((star) => {
+      star.x = (star.x / oldWidth) * nextWidth;
+      star.y = (star.y / oldHeight) * nextHeight;
+    });
+  }
+
+  if (resizeCanvas.entitiesReady && typeof draw === "function") {
+    draw();
+  }
+}
+
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => {
+  setTimeout(resizeCanvas, 120);
 });
 
 renderScores();
