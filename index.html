@@ -3,49 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>動動腦小專案</title>
+    <title>99 飛機生存戰</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="app">
-      <section class="game-panel" aria-labelledby="game-title">
-        <div class="topbar">
+    <main class="shell">
+      <section class="hud" aria-label="遊戲狀態">
+        <div>
+          <p class="eyebrow">Bullet Survival</p>
+          <h1>99 飛機生存戰</h1>
+        </div>
+        <div class="stats">
           <div>
-            <p class="eyebrow">Brain Sprint</p>
-            <h1 id="game-title">動動腦小專案</h1>
+            <span>生存</span>
+            <strong id="survivalTime">0.0s</strong>
           </div>
-          <div class="score-card" aria-live="polite">
-            <span>分數</span>
-            <strong id="score">0</strong>
+          <div>
+            <span>最佳</span>
+            <strong id="bestTime">0.0s</strong>
+          </div>
+          <div>
+            <span>難度</span>
+            <strong id="level">1</strong>
           </div>
         </div>
+      </section>
 
-        <div class="status-row">
-          <div>
-            <span class="label">題目</span>
-            <strong><span id="round">1</span> / <span id="total">10</span></strong>
-          </div>
-          <div>
-            <span class="label">倒數</span>
-            <strong><span id="time">20</span>s</strong>
-          </div>
-          <div>
-            <span class="label">連對</span>
-            <strong id="streak">0</strong>
+      <section class="game-wrap">
+        <canvas id="game" width="960" height="600" aria-label="飛機閃避子彈遊戲"></canvas>
+        <div id="overlay" class="overlay">
+          <div class="overlay-card">
+            <h2 id="overlayTitle">準備起飛</h2>
+            <p id="overlayText">用方向鍵或 WASD 移動，閃開從四面八方射來的子彈。</p>
+            <button id="startBtn" type="button">開始遊戲</button>
           </div>
         </div>
+      </section>
 
-        <article class="question-card">
-          <p id="question">準備好了嗎？</p>
-          <div id="answers" class="answers" aria-label="答案選項"></div>
-        </article>
-
-        <div class="actions">
-          <button id="startBtn" type="button">開始挑戰</button>
-          <button id="nextBtn" class="secondary" type="button" hidden>下一題</button>
+      <section class="leaderboard" aria-labelledby="leaderboardTitle">
+        <div class="board-title">
+          <h2 id="leaderboardTitle">本機排行榜</h2>
+          <button id="clearBoard" class="ghost" type="button">清除</button>
         </div>
-
-        <p id="feedback" class="feedback" role="status"></p>
+        <ol id="scores"></ol>
       </section>
     </main>
 
