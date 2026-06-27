@@ -35,6 +35,20 @@
           <div class="overlay-card">
             <h2 id="overlayTitle">準備起飛</h2>
             <p id="overlayText">電腦用方向鍵或 WASD。手機按住飛機拖曳，就能移動它。</p>
+            <form id="scoreForm" class="score-form" hidden>
+              <label>
+                暱稱
+                <input id="nickname" name="nickname" maxlength="16" placeholder="輸入你的暱稱" />
+              </label>
+              <label>
+                照片
+                <input id="avatarInput" name="avatar" type="file" accept="image/*" />
+              </label>
+              <div class="form-actions">
+                <button id="saveScoreBtn" type="submit">儲存成績</button>
+                <button id="skipScoreBtn" class="secondary" type="button">略過</button>
+              </div>
+            </form>
             <button id="startBtn" type="button">開始遊戲</button>
           </div>
         </div>

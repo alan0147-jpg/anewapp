@@ -29,6 +29,15 @@ button {
   font: inherit;
 }
 
+input {
+  width: 100%;
+  border: 1px solid rgba(151, 184, 245, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+}
+
 .shell {
   width: min(1120px, 100%);
   margin: 0 auto;
@@ -150,6 +159,46 @@ canvas {
   font-weight: 800;
 }
 
+.score-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.score-form[hidden] {
+  display: none;
+}
+
+.score-form label {
+  display: grid;
+  gap: 6px;
+  color: #d7e4f7;
+  font-weight: 700;
+}
+
+.score-form input {
+  padding: 10px 12px;
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 11px 14px;
+  background: #4f7cff;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.form-actions .secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d7e4f7;
+}
+
 .leaderboard {
   align-items: stretch;
   flex-direction: column;
@@ -179,15 +228,57 @@ ol {
   list-style: none;
 }
 
-li {
+.empty-score,
+.score-item {
   padding: 10px 12px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: #d7e4f7;
 }
 
-li strong {
+.score-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f7cff, #7db3ff);
   color: #ffffff;
+  font-weight: 900;
+}
+
+.score-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.score-item strong,
+.score-item span,
+.score-item small {
+  display: block;
+}
+
+.score-item strong {
+  color: #ffffff;
+}
+
+.score-item span {
+  margin-top: 2px;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.score-item small {
+  color: #9fb0ca;
 }
 
 @media (max-width: 760px) {

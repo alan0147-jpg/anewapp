@@ -9,6 +9,10 @@ const overlayText = document.querySelector("#overlayText");
 const startBtn = document.querySelector("#startBtn");
 const scoresEl = document.querySelector("#scores");
 const clearBoard = document.querySelector("#clearBoard");
+const scoreForm = document.querySelector("#scoreForm");
+const nicknameInput = document.querySelector("#nickname");
+const avatarInput = document.querySelector("#avatarInput");
+const skipScoreBtn = document.querySelector("#skipScoreBtn");
 
 const keys = new Set();
 const bullets = [];
@@ -41,15 +45,18 @@ const game = {
   spawnTimer: 0,
   survival: 0,
   level: 1,
+  pendingScore: 0,
 };
 
 function getScores() {
   return JSON.parse(localStorage.getItem("plane-survival-scores") || "[]");
 }
 
-function saveScore(seconds) {
+function saveScore(seconds, playerName = "匿名飛行員", avatar = "") {
   const scores = getScores();
   scores.push({
+    name: playerName.trim() || "匿名飛行員",
+    avatar,
     seconds: Number(seconds.toFixed(2)),
     date: new Date().toLocaleDateString("zh-TW"),
   });
@@ -65,6 +72,7 @@ function renderScores() {
 
   if (scores.length === 0) {
     const empty = document.createElement("li");
+    empty.className = "empty-score";
     empty.textContent = "還沒有紀錄，先活下來再說。";
     scoresEl.append(empty);
     return;
@@ -72,7 +80,23 @@ function renderScores() {
 
   scores.forEach((score, index) => {
     const item = document.createElement("li");
-    item.innerHTML = `<strong>#${index + 1}</strong> ${score.seconds.toFixed(1)}s<br>${score.date}`;
+    item.className = "score-item";
+
+    const avatar = document.createElement("div");
+    avatar.className = "score-avatar";
+    if (score.avatar) {
+      const image = document.createElement("img");
+      image.src = score.avatar;
+      image.alt = `${score.name || "玩家"} 的照片`;
+      avatar.append(image);
+    } else {
+      avatar.textContent = (score.name || "?").slice(0, 1).toUpperCase();
+    }
+
+    const detail = document.createElement("div");
+    detail.innerHTML = `<strong>#${index + 1} ${escapeHtml(score.name || "匿名飛行員")}</strong><span>${score.seconds.toFixed(1)}s</span><small>${score.date}</small>`;
+
+    item.append(avatar, detail);
     scoresEl.append(item);
   });
 }
@@ -90,6 +114,10 @@ function resetGame() {
   game.spawnTimer = 0;
   game.survival = 0;
   game.level = 1;
+  game.pendingScore = 0;
+  scoreForm.hidden = true;
+  startBtn.hidden = false;
+  startBtn.textContent = "開始遊戲";
   overlay.hidden = true;
   requestAnimationFrame(loop);
 }
@@ -477,10 +505,15 @@ function drawRocket(bullet) {
 function endGame() {
   game.running = false;
   game.over = true;
-  saveScore(game.survival);
+  game.pendingScore = Number(game.survival.toFixed(2));
   overlayTitle.textContent = "墜機了";
-  overlayText.textContent = `你撐了 ${game.survival.toFixed(1)} 秒。再來一次，下一把會更穩。`;
+  overlayText.textContent = `你撐了 ${game.survival.toFixed(1)} 秒。留下暱稱和照片，記錄這次飛行。`;
   startBtn.textContent = "再玩一次";
+  startBtn.hidden = true;
+  scoreForm.hidden = false;
+  nicknameInput.value = localStorage.getItem("plane-survival-last-name") || "";
+  avatarInput.value = "";
+  nicknameInput.focus();
   overlay.hidden = false;
 }
 
@@ -511,6 +544,59 @@ function clamp(value, min, max) {
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
+}
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;",
+    };
+    return entities[char];
+  });
+}
+
+function readAvatar(file) {
+  return new Promise((resolve) => {
+    if (!file) {
+      resolve("");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resizeAvatar(reader.result, resolve));
+    reader.addEventListener("error", () => resolve(""));
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeAvatar(src, done) {
+  const image = new Image();
+  image.addEventListener("load", () => {
+    const size = 96;
+    const avatarCanvas = document.createElement("canvas");
+    const avatarCtx = avatarCanvas.getContext("2d");
+    avatarCanvas.width = size;
+    avatarCanvas.height = size;
+
+    const sourceSize = Math.min(image.width, image.height);
+    const sourceX = (image.width - sourceSize) / 2;
+    const sourceY = (image.height - sourceSize) / 2;
+    avatarCtx.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+    done(avatarCanvas.toDataURL("image/jpeg", 0.78));
+  });
+  image.addEventListener("error", () => done(""));
+  image.src = src;
+}
+
+function showRestartPrompt() {
+  scoreForm.hidden = true;
+  startBtn.hidden = false;
+  startBtn.textContent = "再玩一次";
+  overlayText.textContent = "成績已處理。準備好就再飛一次。";
 }
 
 window.addEventListener("keydown", (event) => {
@@ -565,6 +651,20 @@ startBtn.addEventListener("click", resetGame);
 clearBoard.addEventListener("click", () => {
   localStorage.removeItem("plane-survival-scores");
   renderScores();
+});
+
+scoreForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const name = nicknameInput.value.trim() || "匿名飛行員";
+  const avatar = await readAvatar(avatarInput.files[0]);
+  localStorage.setItem("plane-survival-last-name", name);
+  saveScore(game.pendingScore, name, avatar);
+  showRestartPrompt();
+});
+
+skipScoreBtn.addEventListener("click", () => {
+  saveScore(game.pendingScore, "匿名飛行員", "");
+  showRestartPrompt();
 });
 
 window.getGameDebug = () => ({
