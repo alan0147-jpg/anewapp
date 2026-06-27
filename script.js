@@ -100,7 +100,7 @@ function loop(now) {
   const dt = Math.min((now - game.lastTime) / 1000, 0.033);
   game.lastTime = now;
   game.survival = (now - game.startedAt) / 1000;
-  game.level = Math.floor(game.survival / 8) + 1;
+  game.level = Math.floor(game.survival / 6) + 1;
 
   update(dt);
   draw();
@@ -154,7 +154,7 @@ function updateStars(dt) {
 }
 
 function spawnBullets(dt) {
-  const spawnEvery = Math.max(0.075, 0.62 - game.level * 0.038);
+  const spawnEvery = Math.max(0.045, 0.52 - game.level * 0.045);
   game.spawnTimer -= dt;
 
   while (game.spawnTimer <= 0) {
@@ -170,10 +170,11 @@ function spawnBullets(dt) {
 function getSpawnCount() {
   let count = 1;
 
-  if (game.level >= 3 && Math.random() < 0.35) count += 1;
-  if (game.level >= 6 && Math.random() < 0.45) count += 1;
-  if (game.level >= 10 && Math.random() < 0.35) count += 1;
-  if (game.level >= 14 && Math.random() < 0.25) count += 1;
+  if (game.level >= 2 && Math.random() < 0.45) count += 1;
+  if (game.level >= 4 && Math.random() < 0.55) count += 1;
+  if (game.level >= 7 && Math.random() < 0.5) count += 1;
+  if (game.level >= 10 && Math.random() < 0.4) count += 1;
+  if (game.level >= 14 && Math.random() < 0.3) count += 1;
 
   return count;
 }
@@ -219,7 +220,7 @@ function createBullet() {
 function pickBulletType() {
   const roll = Math.random();
 
-  if (game.level >= 9 && roll < 0.18) {
+  if (game.level >= 7 && roll < 0.22) {
     return {
       name: "fast",
       minSpeed: 245,
@@ -232,7 +233,7 @@ function pickBulletType() {
     };
   }
 
-  if (game.level >= 6 && roll < 0.4) {
+  if (game.level >= 5 && roll < 0.44) {
     return {
       name: "slow",
       minSpeed: 72,
@@ -245,7 +246,7 @@ function pickBulletType() {
     };
   }
 
-  if (game.level >= 12 && roll < 0.52) {
+  if (game.level >= 10 && roll < 0.58) {
     return {
       name: "heavy",
       minSpeed: 95,
