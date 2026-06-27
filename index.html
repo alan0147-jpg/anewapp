@@ -44,7 +44,9 @@
               <label>
                 照片
                 <input id="avatarInput" name="avatar" type="file" accept="image/*" />
+                <span class="field-hint">照片限 1MB 以內。</span>
               </label>
+              <p id="formMessage" class="form-message" role="status"></p>
               <div class="form-actions">
                 <button id="saveScoreBtn" type="submit">儲存成績</button>
                 <button id="skipScoreBtn" class="secondary" type="button">略過</button>
@@ -54,7 +56,6 @@
             <section id="leaderboard" class="leaderboard" aria-labelledby="leaderboardTitle" hidden>
               <div class="board-title">
                 <h2 id="leaderboardTitle">本機排行榜</h2>
-                <button id="clearBoard" class="ghost" type="button">清除</button>
               </div>
               <ol id="scores"></ol>
             </section>

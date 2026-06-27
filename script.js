@@ -9,11 +9,12 @@ const overlayText = document.querySelector("#overlayText");
 const startBtn = document.querySelector("#startBtn");
 const leaderboard = document.querySelector("#leaderboard");
 const scoresEl = document.querySelector("#scores");
-const clearBoard = document.querySelector("#clearBoard");
 const scoreForm = document.querySelector("#scoreForm");
 const nicknameInput = document.querySelector("#nickname");
 const avatarInput = document.querySelector("#avatarInput");
 const skipScoreBtn = document.querySelector("#skipScoreBtn");
+const formMessage = document.querySelector("#formMessage");
+const MAX_AVATAR_SIZE = 1024 * 1024;
 
 const keys = new Set();
 const bullets = [];
@@ -521,6 +522,7 @@ function endGame() {
   scoreForm.hidden = false;
   nicknameInput.value = localStorage.getItem("plane-survival-last-name") || "";
   avatarInput.value = "";
+  formMessage.textContent = "";
   nicknameInput.focus();
   overlay.hidden = false;
 }
@@ -571,6 +573,11 @@ function readAvatar(file) {
   return new Promise((resolve) => {
     if (!file) {
       resolve("");
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      resolve(null);
       return;
     }
 
@@ -657,15 +664,25 @@ canvas.addEventListener("pointercancel", () => {
 
 startBtn.addEventListener("click", resetGame);
 
-clearBoard.addEventListener("click", () => {
-  localStorage.removeItem("plane-survival-scores");
-  renderScores();
-});
-
 scoreForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  formMessage.textContent = "";
+
+  const file = avatarInput.files[0];
+  if (file && file.size > MAX_AVATAR_SIZE) {
+    formMessage.textContent = "照片超過 1MB，請換一張小一點的圖片。";
+    avatarInput.value = "";
+    return;
+  }
+
   const name = nicknameInput.value.trim() || "匿名飛行員";
-  const avatar = await readAvatar(avatarInput.files[0]);
+  const avatar = await readAvatar(file);
+  if (avatar === null) {
+    formMessage.textContent = "照片超過 1MB，請換一張小一點的圖片。";
+    avatarInput.value = "";
+    return;
+  }
+
   localStorage.setItem("plane-survival-last-name", name);
   saveScore(game.pendingScore, name, avatar);
   showRestartPrompt();
