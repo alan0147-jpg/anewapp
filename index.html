@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>動動腦小專案</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Brain Sprint</p>
+            <h1 id="game-title">動動腦小專案</h1>
+          </div>
+          <div class="score-card" aria-live="polite">
+            <span>分數</span>
+            <strong id="score">0</strong>
+          </div>
+        </div>
+
+        <div class="status-row">
+          <div>
+            <span class="label">題目</span>
+            <strong><span id="round">1</span> / <span id="total">10</span></strong>
+          </div>
+          <div>
+            <span class="label">倒數</span>
+            <strong><span id="time">20</span>s</strong>
+          </div>
+          <div>
+            <span class="label">連對</span>
+            <strong id="streak">0</strong>
+          </div>
+        </div>
+
+        <article class="question-card">
+          <p id="question">準備好了嗎？</p>
+          <div id="answers" class="answers" aria-label="答案選項"></div>
+        </article>
+
+        <div class="actions">
+          <button id="startBtn" type="button">開始挑戰</button>
+          <button id="nextBtn" class="secondary" type="button" hidden>下一題</button>
+        </div>
+
+        <p id="feedback" class="feedback" role="status"></p>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
