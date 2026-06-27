@@ -213,6 +213,8 @@ function createBullet() {
     vy: Math.sin(angle) * speed,
     radius: randomBetween(type.minRadius, type.maxRadius),
     hue: randomBetween(type.hueMin, type.hueMax),
+    accentHue: randomBetween(type.accentHueMin, type.accentHueMax),
+    angle,
     type: type.name,
   };
 }
@@ -228,8 +230,10 @@ function pickBulletType() {
       levelSpeed: 15,
       minRadius: 4,
       maxRadius: 6,
-      hueMin: 330,
-      hueMax: 360,
+      hueMin: 10,
+      hueMax: 24,
+      accentHueMin: 42,
+      accentHueMax: 58,
     };
   }
 
@@ -243,6 +247,8 @@ function pickBulletType() {
       maxRadius: 12,
       hueMin: 45,
       hueMax: 62,
+      accentHueMin: 160,
+      accentHueMax: 190,
     };
   }
 
@@ -256,6 +262,8 @@ function pickBulletType() {
       maxRadius: 17,
       hueMin: 265,
       hueMax: 292,
+      accentHueMin: 300,
+      accentHueMax: 330,
     };
   }
 
@@ -266,8 +274,10 @@ function pickBulletType() {
     levelSpeed: 11,
     minRadius: 5,
     maxRadius: 8,
-    hueMin: 8,
-    hueMax: 38,
+    hueMin: 185,
+    hueMax: 330,
+    accentHueMin: 20,
+    accentHueMax: 75,
   };
 }
 
@@ -320,23 +330,63 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(player.x, player.y);
 
-  ctx.fillStyle = "rgba(94, 168, 255, 0.28)";
+  ctx.fillStyle = "rgba(94, 168, 255, 0.24)";
   ctx.beginPath();
-  ctx.arc(0, 0, player.radius + 7, 0, Math.PI * 2);
+  ctx.ellipse(0, 1, 25, 28, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#77d7ff";
+  ctx.fillStyle = "#bfe9ff";
   ctx.beginPath();
-  ctx.moveTo(0, -20);
-  ctx.lineTo(16, 17);
-  ctx.lineTo(0, 10);
-  ctx.lineTo(-16, 17);
+  ctx.moveTo(0, -24);
+  ctx.bezierCurveTo(10, -14, 11, 9, 5, 22);
+  ctx.lineTo(-5, 22);
+  ctx.bezierCurveTo(-11, 9, -10, -14, 0, -24);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#4bbdff";
+  ctx.beginPath();
+  ctx.moveTo(-7, -3);
+  ctx.lineTo(-28, 15);
+  ctx.lineTo(-9, 16);
+  ctx.lineTo(-3, 5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(7, -3);
+  ctx.lineTo(28, 15);
+  ctx.lineTo(9, 16);
+  ctx.lineTo(3, 5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#2f8fff";
+  ctx.beginPath();
+  ctx.moveTo(-5, 14);
+  ctx.lineTo(-15, 26);
+  ctx.lineTo(-3, 23);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(5, 14);
+  ctx.lineTo(15, 26);
+  ctx.lineTo(3, 23);
   ctx.closePath();
   ctx.fill();
 
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.arc(0, -3, 5, 0, Math.PI * 2);
+  ctx.ellipse(0, -8, 5, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffb347";
+  ctx.beginPath();
+  ctx.moveTo(-5, 22);
+  ctx.lineTo(0, 34);
+  ctx.lineTo(5, 22);
+  ctx.closePath();
   ctx.fill();
 
   ctx.restore();
@@ -344,21 +394,84 @@ function drawPlayer() {
 
 function drawBullets() {
   bullets.forEach((bullet) => {
-    ctx.fillStyle = `hsl(${bullet.hue} 100% 60%)`;
+    if (bullet.type === "fast") {
+      drawRocket(bullet);
+      return;
+    }
+
+    const gradient = ctx.createRadialGradient(
+      bullet.x - bullet.radius * 0.35,
+      bullet.y - bullet.radius * 0.35,
+      1,
+      bullet.x,
+      bullet.y,
+      bullet.radius * 1.6,
+    );
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.38, `hsl(${bullet.hue} 100% 62%)`);
+    gradient.addColorStop(1, `hsl(${bullet.accentHue} 100% 48%)`);
+
+    ctx.fillStyle = gradient;
     ctx.shadowColor = `hsl(${bullet.hue} 100% 55%)`;
-    ctx.shadowBlur = bullet.type === "fast" ? 20 : 14;
+    ctx.shadowBlur = bullet.type === "heavy" ? 22 : 15;
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    if (bullet.type === "fast") {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
+    ctx.strokeStyle = `hsla(${bullet.accentHue} 100% 78% / 0.75)`;
+    ctx.lineWidth = bullet.type === "heavy" ? 2 : 1.2;
+    ctx.stroke();
     ctx.shadowBlur = 0;
   });
+}
+
+function drawRocket(bullet) {
+  ctx.save();
+  ctx.translate(bullet.x, bullet.y);
+  ctx.rotate(bullet.angle + Math.PI / 2);
+
+  ctx.shadowColor = "#ff7a1a";
+  ctx.shadowBlur = 18;
+
+  ctx.fillStyle = "#f5f7ff";
+  ctx.beginPath();
+  ctx.moveTo(0, -17);
+  ctx.bezierCurveTo(8, -8, 7, 8, 3, 15);
+  ctx.lineTo(-3, 15);
+  ctx.bezierCurveTo(-7, 8, -8, -8, 0, -17);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = `hsl(${bullet.hue} 100% 55%)`;
+  ctx.beginPath();
+  ctx.moveTo(-5, 7);
+  ctx.lineTo(-13, 17);
+  ctx.lineTo(-3, 14);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(5, 7);
+  ctx.lineTo(13, 17);
+  ctx.lineTo(3, 14);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#5bd7ff";
+  ctx.beginPath();
+  ctx.arc(0, -4, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = `hsl(${bullet.accentHue} 100% 56%)`;
+  ctx.beginPath();
+  ctx.moveTo(-4, 15);
+  ctx.lineTo(0, 27);
+  ctx.lineTo(4, 15);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
 function endGame() {
