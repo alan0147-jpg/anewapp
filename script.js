@@ -1,3 +1,35 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadString,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCc8V3NK6Gc32DaB_OEQX0GfJ6ly06_jv0",
+  authDomain: "plane-survival-game.firebaseapp.com",
+  projectId: "plane-survival-game",
+  storageBucket: "plane-survival-game.firebasestorage.app",
+  messagingSenderId: "374613673228",
+  appId: "1:374613673228:web:8c55cbf6840aa9210bb529",
+  measurementId: "G-X44D0S9F53",
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
+const scoresCollection = collection(db, "scores");
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const survivalTimeEl = document.querySelector("#survivalTime");
@@ -57,59 +89,90 @@ const game = {
 resizeCanvas.entitiesReady = true;
 resizeCanvas();
 
-function getScores() {
-  return JSON.parse(localStorage.getItem("plane-survival-scores") || "[]");
-}
+async function getScores() {
+  const scoreQuery = query(scoresCollection, orderBy("seconds", "desc"), limit(MAX_LEADERBOARD_SCORES));
+  const snapshot = await getDocs(scoreQuery);
 
-function saveScore(seconds, playerName = "匿名飛行員", avatar = "") {
-  const scores = getScores();
-  scores.push({
-    name: playerName.trim() || "匿名飛行員",
-    avatar,
-    seconds: Number(seconds.toFixed(2)),
-    date: new Date().toLocaleDateString("zh-TW"),
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    const createdAt = data.createdAt?.toDate?.();
+    return {
+      id: doc.id,
+      name: data.name || "匿名飛行員",
+      avatar: data.avatarUrl || "",
+      seconds: Number(data.seconds || 0),
+      date: createdAt ? createdAt.toLocaleDateString("zh-TW") : data.date || "",
+    };
   });
-  scores.sort((a, b) => b.seconds - a.seconds);
-  localStorage.setItem("plane-survival-scores", JSON.stringify(scores.slice(0, MAX_LEADERBOARD_SCORES)));
-  renderScores();
 }
 
-function renderScores() {
-  const scores = getScores();
-  bestTimeEl.textContent = `${(scores[0]?.seconds || 0).toFixed(1)}s`;
-  scoresEl.innerHTML = "";
+async function saveScore(seconds, playerName = "匿名飛行員", avatar = "") {
+  const scoreId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let avatarUrl = "";
 
-  if (scores.length === 0) {
-    const empty = document.createElement("li");
-    empty.className = "empty-score";
-    empty.textContent = "還沒有紀錄，先活下來再說。";
-    scoresEl.append(empty);
-    return;
+  if (avatar) {
+    const avatarRef = ref(storage, `avatars/${scoreId}.jpg`);
+    await uploadString(avatarRef, avatar, "data_url");
+    avatarUrl = await getDownloadURL(avatarRef);
   }
 
-  scores.slice(0, MAX_LEADERBOARD_SCORES).forEach((score, index) => {
-    const item = document.createElement("li");
-    item.className = "score-item";
-
-    const avatar = document.createElement("div");
-    avatar.className = "score-avatar";
-    if (score.avatar) {
-      const image = document.createElement("img");
-      image.src = score.avatar;
-      image.alt = `${score.name || "玩家"} 的照片`;
-      avatar.append(image);
-    } else {
-      avatar.textContent = (score.name || "?").slice(0, 1).toUpperCase();
-    }
-
-    const detail = document.createElement("div");
-    detail.innerHTML = `<strong>#${index + 1} ${escapeHtml(score.name || "匿名飛行員")}</strong><span>${score.seconds.toFixed(1)}s</span><small>${score.date}</small>`;
-
-    item.append(avatar, detail);
-    scoresEl.append(item);
+  await addDoc(scoresCollection, {
+    name: playerName.trim() || "匿名飛行員",
+    avatarUrl,
+    seconds: Number(seconds.toFixed(2)),
+    date: new Date().toLocaleDateString("zh-TW"),
+    createdAt: serverTimestamp(),
   });
+
+  renderScores();
+  return true;
 }
 
+async function renderScores() {
+  scoresEl.innerHTML = "";
+
+  try {
+    const scores = await getScores();
+    bestTimeEl.textContent = `${(scores[0]?.seconds || 0).toFixed(1)}s`;
+
+    if (scores.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "empty-score";
+      empty.textContent = "還沒有紀錄，先活下來再說。";
+      scoresEl.append(empty);
+      return;
+    }
+
+    scores.forEach((score, index) => {
+      const item = document.createElement("li");
+      item.className = "score-item";
+
+      const avatar = document.createElement("div");
+      avatar.className = "score-avatar";
+      if (score.avatar) {
+        const image = document.createElement("img");
+        image.src = score.avatar;
+        image.alt = `${score.name || "玩家"} 的照片`;
+        avatar.append(image);
+      } else {
+        avatar.textContent = (score.name || "?").slice(0, 1).toUpperCase();
+      }
+
+      const detail = document.createElement("div");
+      detail.innerHTML = `<strong>#${index + 1} ${escapeHtml(score.name || "匿名飛行員")}</strong><span>${score.seconds.toFixed(1)}s</span><small>${score.date}</small>`;
+
+      item.append(avatar, detail);
+      scoresEl.append(item);
+    });
+  } catch (error) {
+    console.error(error);
+    bestTimeEl.textContent = "--";
+    const empty = document.createElement("li");
+    empty.className = "empty-score";
+    empty.textContent = "排行榜暫時無法讀取，請確認 Firebase 規則已開啟。";
+    scoresEl.append(empty);
+  }
+}
 function resetGame() {
   bullets.length = 0;
   player.x = canvas.width / 2;
@@ -684,14 +747,25 @@ scoreForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  localStorage.setItem("plane-survival-last-name", name);
-  saveScore(game.pendingScore, name, avatar);
-  showRestartPrompt();
+  try {
+    localStorage.setItem("plane-survival-last-name", name);
+    await saveScore(game.pendingScore, name, avatar);
+    showRestartPrompt();
+  } catch (error) {
+    console.error(error);
+    formMessage.textContent = "成績上傳失敗，請確認 Firebase Firestore 和 Storage 規則已開啟。";
+  }
 });
+skipScoreBtn.addEventListener("click", async () => {
+  formMessage.textContent = "";
 
-skipScoreBtn.addEventListener("click", () => {
-  saveScore(game.pendingScore, "匿名飛行員", "");
-  showRestartPrompt();
+  try {
+    await saveScore(game.pendingScore, "匿名飛行員", "");
+    showRestartPrompt();
+  } catch (error) {
+    console.error(error);
+    formMessage.textContent = "成績上傳失敗，請確認 Firebase Firestore 規則已開啟。";
+  }
 });
 
 window.getGameDebug = () => ({
