@@ -26,6 +26,13 @@ const player = {
   speed: 285,
 };
 
+const pointer = {
+  active: false,
+  id: null,
+  offsetX: 0,
+  offsetY: 0,
+};
+
 const game = {
   running: false,
   over: false,
@@ -74,6 +81,8 @@ function resetGame() {
   bullets.length = 0;
   player.x = canvas.width / 2;
   player.y = canvas.height / 2;
+  pointer.active = false;
+  pointer.id = null;
   game.running = true;
   game.over = false;
   game.startedAt = performance.now();
@@ -91,7 +100,7 @@ function loop(now) {
   const dt = Math.min((now - game.lastTime) / 1000, 0.033);
   game.lastTime = now;
   game.survival = (now - game.startedAt) / 1000;
-  game.level = Math.floor(game.survival / 10) + 1;
+  game.level = Math.floor(game.survival / 8) + 1;
 
   update(dt);
   draw();
@@ -110,6 +119,12 @@ function update(dt) {
 }
 
 function updatePlayer(dt) {
+  if (pointer.active) {
+    player.x = clamp(player.x, player.radius + 6, canvas.width - player.radius - 6);
+    player.y = clamp(player.y, player.radius + 6, canvas.height - player.radius - 6);
+    return;
+  }
+
   let dx = 0;
   let dy = 0;
 
@@ -139,16 +154,28 @@ function updateStars(dt) {
 }
 
 function spawnBullets(dt) {
-  const spawnEvery = Math.max(0.16, 0.72 - game.level * 0.055);
+  const spawnEvery = Math.max(0.075, 0.62 - game.level * 0.038);
   game.spawnTimer -= dt;
 
   while (game.spawnTimer <= 0) {
     game.spawnTimer += spawnEvery;
-    const count = game.level >= 5 && Math.random() < 0.34 ? 2 : 1;
+    const count = getSpawnCount();
+
     for (let i = 0; i < count; i += 1) {
       bullets.push(createBullet());
     }
   }
+}
+
+function getSpawnCount() {
+  let count = 1;
+
+  if (game.level >= 3 && Math.random() < 0.35) count += 1;
+  if (game.level >= 6 && Math.random() < 0.45) count += 1;
+  if (game.level >= 10 && Math.random() < 0.35) count += 1;
+  if (game.level >= 14 && Math.random() < 0.25) count += 1;
+
+  return count;
 }
 
 function createBullet() {
@@ -171,18 +198,75 @@ function createBullet() {
     y = Math.random() * canvas.height;
   }
 
-  const aimX = player.x + randomBetween(-70, 70);
-  const aimY = player.y + randomBetween(-70, 70);
+  const type = pickBulletType();
+  const aimSpread = Math.max(18, 78 - game.level * 3);
+  const aimX = player.x + randomBetween(-aimSpread, aimSpread);
+  const aimY = player.y + randomBetween(-aimSpread, aimSpread);
   const angle = Math.atan2(aimY - y, aimX - x);
-  const speed = randomBetween(120, 185) + game.level * 12;
+  const speed = randomBetween(type.minSpeed, type.maxSpeed) + game.level * type.levelSpeed;
 
   return {
     x,
     y,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
-    radius: randomBetween(5, 8),
-    hue: randomBetween(8, 38),
+    radius: randomBetween(type.minRadius, type.maxRadius),
+    hue: randomBetween(type.hueMin, type.hueMax),
+    type: type.name,
+  };
+}
+
+function pickBulletType() {
+  const roll = Math.random();
+
+  if (game.level >= 9 && roll < 0.18) {
+    return {
+      name: "fast",
+      minSpeed: 245,
+      maxSpeed: 330,
+      levelSpeed: 15,
+      minRadius: 4,
+      maxRadius: 6,
+      hueMin: 330,
+      hueMax: 360,
+    };
+  }
+
+  if (game.level >= 6 && roll < 0.4) {
+    return {
+      name: "slow",
+      minSpeed: 72,
+      maxSpeed: 115,
+      levelSpeed: 6,
+      minRadius: 8,
+      maxRadius: 12,
+      hueMin: 45,
+      hueMax: 62,
+    };
+  }
+
+  if (game.level >= 12 && roll < 0.52) {
+    return {
+      name: "heavy",
+      minSpeed: 95,
+      maxSpeed: 145,
+      levelSpeed: 8,
+      minRadius: 12,
+      maxRadius: 17,
+      hueMin: 265,
+      hueMax: 292,
+    };
+  }
+
+  return {
+    name: "normal",
+    minSpeed: 125,
+    maxSpeed: 190,
+    levelSpeed: 11,
+    minRadius: 5,
+    maxRadius: 8,
+    hueMin: 8,
+    hueMax: 38,
   };
 }
 
@@ -199,10 +283,10 @@ function updateBullets(dt) {
     }
 
     if (
-      bullet.x < -80 ||
-      bullet.x > canvas.width + 80 ||
-      bullet.y < -80 ||
-      bullet.y > canvas.height + 80
+      bullet.x < -100 ||
+      bullet.x > canvas.width + 100 ||
+      bullet.y < -100 ||
+      bullet.y > canvas.height + 100
     ) {
       bullets.splice(i, 1);
     }
@@ -235,6 +319,11 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(player.x, player.y);
 
+  ctx.fillStyle = "rgba(94, 168, 255, 0.28)";
+  ctx.beginPath();
+  ctx.arc(0, 0, player.radius + 7, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.fillStyle = "#77d7ff";
   ctx.beginPath();
   ctx.moveTo(0, -20);
@@ -249,11 +338,6 @@ function drawPlayer() {
   ctx.arc(0, -3, 5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(94, 168, 255, 0.35)";
-  ctx.beginPath();
-  ctx.arc(0, 0, player.radius + 5, 0, Math.PI * 2);
-  ctx.fill();
-
   ctx.restore();
 }
 
@@ -261,10 +345,17 @@ function drawBullets() {
   bullets.forEach((bullet) => {
     ctx.fillStyle = `hsl(${bullet.hue} 100% 60%)`;
     ctx.shadowColor = `hsl(${bullet.hue} 100% 55%)`;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = bullet.type === "fast" ? 20 : 14;
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    if (bullet.type === "fast") {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
     ctx.shadowBlur = 0;
   });
 }
@@ -282,6 +373,22 @@ function endGame() {
 function updateHud() {
   survivalTimeEl.textContent = `${game.survival.toFixed(1)}s`;
   levelEl.textContent = game.level;
+}
+
+function getCanvasPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function movePlayerTo(point) {
+  player.x = clamp(point.x - pointer.offsetX, player.radius + 6, canvas.width - player.radius - 6);
+  player.y = clamp(point.y - pointer.offsetY, player.radius + 6, canvas.height - player.radius - 6);
 }
 
 function clamp(value, min, max) {
@@ -306,11 +413,52 @@ window.addEventListener("keyup", (event) => {
   keys.delete(event.key.toLowerCase());
 });
 
+canvas.addEventListener("pointerdown", (event) => {
+  if (!game.running) return;
+
+  const point = getCanvasPoint(event);
+  const distance = Math.hypot(point.x - player.x, point.y - player.y);
+  if (distance > player.radius + 28) return;
+
+  pointer.active = true;
+  pointer.id = event.pointerId;
+  pointer.offsetX = point.x - player.x;
+  pointer.offsetY = point.y - player.y;
+  canvas.setPointerCapture(event.pointerId);
+  event.preventDefault();
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (!pointer.active || event.pointerId !== pointer.id) return;
+
+  movePlayerTo(getCanvasPoint(event));
+  event.preventDefault();
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (event.pointerId !== pointer.id) return;
+  pointer.active = false;
+  pointer.id = null;
+});
+
+canvas.addEventListener("pointercancel", () => {
+  pointer.active = false;
+  pointer.id = null;
+});
+
 startBtn.addEventListener("click", resetGame);
 
 clearBoard.addEventListener("click", () => {
   localStorage.removeItem("plane-survival-scores");
   renderScores();
+});
+
+window.getGameDebug = () => ({
+  bulletCount: bullets.length,
+  level: game.level,
+  running: game.running,
+  survival: game.survival,
+  pointerActive: pointer.active,
 });
 
 renderScores();

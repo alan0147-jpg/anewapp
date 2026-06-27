@@ -19,6 +19,7 @@ body {
   background:
     radial-gradient(circle at 20% 10%, rgba(51, 94, 190, 0.34), transparent 32rem),
     linear-gradient(180deg, #111827 0%, #090d16 52%, #05070d 100%);
+  overscroll-behavior: none;
 }
 
 button {
@@ -110,6 +111,8 @@ canvas {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
+  touch-action: none;
+  user-select: none;
 }
 
 .overlay {
