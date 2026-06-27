@@ -35,6 +35,7 @@
           <div class="overlay-card">
             <h2 id="overlayTitle">準備起飛</h2>
             <p id="overlayText">電腦用方向鍵或 WASD。手機按住飛機拖曳，就能移動它。</p>
+
             <form id="scoreForm" class="score-form" hidden>
               <label>
                 暱稱
@@ -49,17 +50,18 @@
                 <button id="skipScoreBtn" class="secondary" type="button">略過</button>
               </div>
             </form>
+
+            <section id="leaderboard" class="leaderboard" aria-labelledby="leaderboardTitle" hidden>
+              <div class="board-title">
+                <h2 id="leaderboardTitle">本機排行榜</h2>
+                <button id="clearBoard" class="ghost" type="button">清除</button>
+              </div>
+              <ol id="scores"></ol>
+            </section>
+
             <button id="startBtn" type="button">開始遊戲</button>
           </div>
         </div>
-      </section>
-
-      <section class="leaderboard" aria-labelledby="leaderboardTitle">
-        <div class="board-title">
-          <h2 id="leaderboardTitle">本機排行榜</h2>
-          <button id="clearBoard" class="ghost" type="button">清除</button>
-        </div>
-        <ol id="scores"></ol>
       </section>
     </main>
 

@@ -44,8 +44,7 @@ input {
   padding: 22px;
 }
 
-.hud,
-.leaderboard {
+.hud {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -81,8 +80,7 @@ h1 {
   gap: 10px;
 }
 
-.stats div,
-.leaderboard {
+.stats div {
   border: 1px solid rgba(126, 163, 230, 0.22);
   border-radius: 8px;
   background: rgba(10, 17, 30, 0.72);
@@ -138,7 +136,9 @@ canvas {
 }
 
 .overlay-card {
-  width: min(420px, 100%);
+  width: min(560px, 100%);
+  max-height: min(88vh, 680px);
+  overflow: auto;
   padding: 24px;
   border: 1px solid rgba(151, 184, 245, 0.3);
   border-radius: 8px;
@@ -200,10 +200,21 @@ canvas {
 }
 
 .leaderboard {
+  display: flex;
   align-items: stretch;
   flex-direction: column;
-  margin-top: 16px;
-  padding: 16px;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid rgba(126, 163, 230, 0.22);
+  border-radius: 8px;
+  background: rgba(10, 17, 30, 0.72);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+  text-align: left;
+}
+
+.leaderboard[hidden] {
+  display: none;
 }
 
 .board-title {
@@ -221,7 +232,7 @@ canvas {
 
 ol {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
   padding: 0;

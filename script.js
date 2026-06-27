@@ -7,6 +7,7 @@ const overlay = document.querySelector("#overlay");
 const overlayTitle = document.querySelector("#overlayTitle");
 const overlayText = document.querySelector("#overlayText");
 const startBtn = document.querySelector("#startBtn");
+const leaderboard = document.querySelector("#leaderboard");
 const scoresEl = document.querySelector("#scores");
 const clearBoard = document.querySelector("#clearBoard");
 const scoreForm = document.querySelector("#scoreForm");
@@ -116,6 +117,7 @@ function resetGame() {
   game.level = 1;
   game.pendingScore = 0;
   scoreForm.hidden = true;
+  leaderboard.hidden = true;
   startBtn.hidden = false;
   startBtn.textContent = "開始遊戲";
   overlay.hidden = true;
@@ -594,9 +596,10 @@ function resizeAvatar(src, done) {
 
 function showRestartPrompt() {
   scoreForm.hidden = true;
+  leaderboard.hidden = false;
   startBtn.hidden = false;
   startBtn.textContent = "再玩一次";
-  overlayText.textContent = "成績已處理。準備好就再飛一次。";
+  overlayText.textContent = "成績已處理。排行榜如下，準備好就再飛一次。";
 }
 
 window.addEventListener("keydown", (event) => {
