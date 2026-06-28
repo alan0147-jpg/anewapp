@@ -229,7 +229,7 @@ function updateStars(dt) {
 }
 
 function spawnBullets(dt) {
-  const spawnEvery = Math.max(0.045, 0.52 - game.level * 0.045);
+  const spawnEvery = Math.max(0.035, (0.52 - game.level * 0.045) * 0.72);
   game.spawnTimer -= dt;
 
   while (game.spawnTimer <= 0) {
@@ -245,6 +245,7 @@ function spawnBullets(dt) {
 function getSpawnCount() {
   let count = 1;
 
+  if (game.level >= 1 && Math.random() < 0.25) count += 1;
   if (game.level >= 2 && Math.random() < 0.45) count += 1;
   if (game.level >= 4 && Math.random() < 0.55) count += 1;
   if (game.level >= 7 && Math.random() < 0.5) count += 1;
