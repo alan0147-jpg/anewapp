@@ -47,7 +47,7 @@ const avatarInput = document.querySelector("#avatarInput");
 const saveScoreBtn = document.querySelector("#saveScoreBtn");
 const skipScoreBtn = document.querySelector("#skipScoreBtn");
 const formMessage = document.querySelector("#formMessage");
-const MAX_AVATAR_SIZE = 1024 * 1024;
+const MAX_AVATAR_SIZE = 3 * 1024 * 1024;
 const MAX_LEADERBOARD_SCORES = 30;
 
 const keys = new Set();
@@ -743,7 +743,7 @@ scoreForm.addEventListener("submit", async (event) => {
 
   const file = avatarInput.files[0];
   if (file && file.size > MAX_AVATAR_SIZE) {
-    formMessage.textContent = "照片超過 1MB，請換一張小一點的圖片。";
+    formMessage.textContent = "照片超過 3MB，請換一張小一點的圖片。";
     avatarInput.value = "";
     return;
   }
@@ -751,7 +751,7 @@ scoreForm.addEventListener("submit", async (event) => {
   const name = nicknameInput.value.trim() || "匿名飛行員";
   const avatar = await readAvatar(file);
   if (avatar === null) {
-    formMessage.textContent = "照片超過 1MB，請換一張小一點的圖片。";
+    formMessage.textContent = "照片超過 3MB，請換一張小一點的圖片。";
     avatarInput.value = "";
     return;
   }
