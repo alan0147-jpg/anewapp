@@ -550,6 +550,8 @@ function drawRocket(bullet) {
 }
 
 function endGame() {
+  if (game.over) return;
+
   game.running = false;
   game.over = true;
   game.pendingScore = Number(game.survival.toFixed(2));
@@ -560,7 +562,6 @@ function endGame() {
   scoreForm.hidden = false;
   nicknameInput.value = localStorage.getItem("plane-survival-last-name") || "";
   formMessage.textContent = "";
-  nicknameInput.focus();
   overlay.hidden = false;
 }
 
