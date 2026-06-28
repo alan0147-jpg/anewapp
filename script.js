@@ -44,6 +44,7 @@ const scoresEl = document.querySelector("#scores");
 const scoreForm = document.querySelector("#scoreForm");
 const nicknameInput = document.querySelector("#nickname");
 const avatarInput = document.querySelector("#avatarInput");
+const saveScoreBtn = document.querySelector("#saveScoreBtn");
 const skipScoreBtn = document.querySelector("#skipScoreBtn");
 const formMessage = document.querySelector("#formMessage");
 const MAX_AVATAR_SIZE = 1024 * 1024;
@@ -677,6 +678,14 @@ function showRestartPrompt() {
   startBtn.hidden = false;
   startBtn.textContent = "再玩一次";
   overlayText.textContent = "成績已處理。排行榜如下，準備好就再飛一次。";
+  setScoreFormBusy(false);
+}
+
+function setScoreFormBusy(isBusy) {
+  saveScoreBtn.disabled = isBusy;
+  skipScoreBtn.disabled = isBusy;
+  nicknameInput.disabled = isBusy;
+  avatarInput.disabled = isBusy;
 }
 
 window.addEventListener("keydown", (event) => {
@@ -748,24 +757,36 @@ scoreForm.addEventListener("submit", async (event) => {
   }
 
   try {
+    setScoreFormBusy(true);
+    formMessage.textContent = "正在儲存成績...";
     localStorage.setItem("plane-survival-last-name", name);
     await saveScore(game.pendingScore, name, avatar);
     showRestartPrompt();
   } catch (error) {
     console.error(error);
     formMessage.textContent = "成績上傳失敗，請確認 Firebase Firestore 和 Storage 規則已開啟。";
+    setScoreFormBusy(false);
   }
 });
-skipScoreBtn.addEventListener("click", async () => {
+skipScoreBtn.addEventListener("click", async (event) => {
+  event.preventDefault();
+  event.stopPropagation();
   formMessage.textContent = "";
+  avatarInput.value = "";
 
-  try {
-    await saveScore(game.pendingScore, "匿名飛行員", "");
-    showRestartPrompt();
-  } catch (error) {
-    console.error(error);
-    formMessage.textContent = "成績上傳失敗，請確認 Firebase Firestore 規則已開啟。";
-  }
+  const name = nicknameInput.value.trim() || "匿名飛行員";
+  localStorage.setItem("plane-survival-last-name", name);
+  showRestartPrompt();
+  overlayText.textContent = "已略過照片，成績正在送出。排行榜會自動更新。";
+
+  saveScore(game.pendingScore, name, "")
+    .then(() => {
+      overlayText.textContent = "成績已處理。排行榜如下，準備好就再飛一次。";
+    })
+    .catch((error) => {
+      console.error(error);
+      overlayText.textContent = "成績上傳失敗，請確認 Firebase Firestore 規則已開啟。";
+    });
 });
 
 window.getGameDebug = () => ({
